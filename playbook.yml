@@ -1,0 +1,47 @@
+---
+- name: "[Installation]"
+  hosts: all
+  become: yes
+  vars:
+    project_name: alfresco-adf
+    project_install_path: /var/www/html
+  tasks:
+    - name: "Installation de nginx"
+      ansible.builtin.package:
+        name: nginx
+        state: latest
+    - name: "Copie du fichier de conf nginx global"
+      copy:
+        src: ./conf/nginx-template.conf
+        dest: /etc/nginx/nginx.conf
+        backup: yes
+    - name: "Copie du fichier de conf nginx du projet"
+      copy:
+        src: ./conf/alfresco-adf-nginx-template.conf
+        dest: /etc/nginx/conf.d/alfresco-adf.conf
+    - name: "Redémarage de nginx"
+      ansible.builtin.service:
+        name: nginx
+        state: restarted
+        enabled: yes
+    - name: "Netoyage des anciennes versions du projet"
+      ansible.builtin.file:
+        path: "{{ project_install_path }}/{{ project_name  }}"
+        state: absent
+    - name: "Copie des sources zipées du projet sur le serveur"
+      copy:
+        src: "./packages/{{ project_name }}.tar"
+        dest: "/tmp/{{ project_name }}.tar"
+    - name: "Décompression des sources du projet dans le répertoire d'installation"
+      ansible.builtin.unarchive:
+        src: "/tmp/{{ project_name }}.tar"
+        dest: "{{ project_install_path }}"
+        remote_src: yes
+    - name: "Changement des permissions sur les sources du projet"
+      ansible.builtin.file:
+        path: "{{ project_install_path }}/{{ project_name }}"
+        state: directory
+        recurse: yes
+        owner: www-data
+        group: www-data
+        mode: 0775
