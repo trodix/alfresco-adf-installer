@@ -1,42 +1,78 @@
 ---
-- name: "[Installation]"
+- name: "Installation de alfresco-adf"
   hosts: all
   become: yes
+
   vars:
     project_name: alfresco-adf
     project_install_path: /var/www/html
+    project_port: 4201
+
   tasks:
+    - name: "Ajout de l'utilisateur www-data si non existant"
+      user:
+        name: www-data
+        system: yes
+        create_home: yes
+        shell: /usr/sbin/nologin
+        home: /var/www
+        skeleton: "false" # Permet de ne pas créer de fichier .bashrc pour l'utilisateur
+        state: present
+
+    - name: "Changement des permissions de /var/www pour www-data"
+      ansible.builtin.file:
+        path: /var/www
+        owner: www-data
+        group: www-data
+        mode: 0755
+
+    - name: "Création du dossier d'installation"
+      ansible.builtin.file:
+        path: "{{ project_install_path }}"
+        state: directory
+        recurse: yes
+        owner: www-data
+        group: www-data
+        mode: 0755
+
+    - name: "Enable EPEL Repository on CentOS 7" # Permet d'installer les repos entreprise pour avoir nginx
+      ansible.builtin.package:
+        name: epel-release
+        state: present
+      when: ansible_facts['os_family'] == 'RedHat' and ansible_facts ['distribution_major_version'] == '7'
+
     - name: "Installation de nginx"
       ansible.builtin.package:
         name: nginx
-        state: latest
+        state: present
+
     - name: "Copie du fichier de conf nginx global"
       template:
         src: ./templates/nginx.conf.j2
         dest: /etc/nginx/nginx.conf
         backup: yes
+
     - name: "Copie du fichier de conf nginx du projet"
       template:
         src: ./templates/alfresco-adf-nginx.conf.j2
         dest: /etc/nginx/conf.d/alfresco-adf.conf
-    - name: "Redémarage de nginx"
-      ansible.builtin.service:
-        name: nginx
-        state: restarted
-        enabled: yes
+
     - name: "Netoyage des anciennes versions du projet"
       ansible.builtin.file:
-        path: "{{ project_install_path }}/{{ project_name  }}"
+        path: "{{ project_install_path }}/{{ project_name }}"
         state: absent
+
     - name: "Copie des sources zipées du projet sur le serveur"
       copy:
         src: "./packages/{{ project_name }}.tar"
         dest: "/tmp/{{ project_name }}.tar"
+
     - name: "Décompression des sources du projet dans le répertoire d'installation"
       ansible.builtin.unarchive:
         src: "/tmp/{{ project_name }}.tar"
         dest: "{{ project_install_path }}"
         remote_src: yes
+
     - name: "Changement des permissions sur les sources du projet"
       ansible.builtin.file:
         path: "{{ project_install_path }}/{{ project_name }}"
@@ -44,4 +80,10 @@
         recurse: yes
         owner: www-data
         group: www-data
-        mode: 0775
+        mode: 0755
+
+    - name: "Redémarage de nginx"
+      ansible.builtin.service:
+        name: nginx
+        state: restarted
+        enabled: yes

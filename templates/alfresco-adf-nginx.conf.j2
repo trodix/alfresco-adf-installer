@@ -1,6 +1,6 @@
 server {
-  listen 0.0.0.0:4200;
-  root {{ project_install_path  }}/{{ project_name }};
+  listen 0.0.0.0:{{ project_port }};
+  root {{ project_install_path }}/{{ project_name }};
   index index.html;
   location /adf {
     autoindex on;
