@@ -11,13 +11,13 @@
         name: nginx
         state: latest
     - name: "Copie du fichier de conf nginx global"
-      copy:
-        src: ./conf/nginx-template.conf
+      template:
+        src: ./templates/nginx.conf.j2
         dest: /etc/nginx/nginx.conf
         backup: yes
     - name: "Copie du fichier de conf nginx du projet"
-      copy:
-        src: ./conf/alfresco-adf-nginx-template.conf
+      template:
+        src: ./templates/alfresco-adf-nginx.conf.j2
         dest: /etc/nginx/conf.d/alfresco-adf.conf
     - name: "Redémarage de nginx"
       ansible.builtin.service:
