@@ -4,9 +4,26 @@
   become: yes
 
   vars:
-    project_name: alfresco-adf
-    project_install_path: /var/www/html
-    project_port: 4201
+    # Configuration installation ADF
+    adf_project_name: alfresco-adf
+    adf_install_path: /var/www/html
+    adf_port: 4201
+    # Parametrage ADF
+    adf_providers: ECM # ECM, BPM, ALL
+    ecm_host: http://192.168.1.18:8080 # Configuration ACS
+    bpm_host: http://192.168.1.18:8081 # Configuration APS
+    adf_identity_host: "{protocol}//{hostname}{:port}/auth/realms/alfresco"
+    adf_auth_type: BASIC # BASIC, OAUTH
+    adf_oauth: # Utilisé si adf_auth_type: OAUTH
+      host: "{protocol}//{hostname}{:port}/auth/realms/alfresco"
+      client_id: alfresco
+      scope: openid
+      secret: ~
+      implicit_flow: "true" # true, false
+      silent_login: "true" # true, false
+      redirect_silent_iframe_uri: "{protocol}//{hostname}{:port}/assets/silent-refresh.html"
+      redirect_uri: /
+      redirect_uri_logout: /logout
 
   tasks:
     - name: "Ajout de l'utilisateur www-data si non existant"
@@ -28,7 +45,7 @@
 
     - name: "Création du dossier d'installation"
       ansible.builtin.file:
-        path: "{{ project_install_path }}"
+        path: "{{ adf_install_path }}"
         state: directory
         recurse: yes
         owner: www-data
@@ -59,23 +76,28 @@
 
     - name: "Netoyage des anciennes versions du projet"
       ansible.builtin.file:
-        path: "{{ project_install_path }}/{{ project_name }}"
+        path: "{{ adf_install_path }}/{{ adf_project_name }}"
         state: absent
 
     - name: "Copie des sources zipées du projet sur le serveur"
       copy:
-        src: "./packages/{{ project_name }}.tar"
-        dest: "/tmp/{{ project_name }}.tar"
+        src: "./packages/{{ adf_project_name }}.tar"
+        dest: "/tmp/{{ adf_project_name }}.tar"
 
     - name: "Décompression des sources du projet dans le répertoire d'installation"
       ansible.builtin.unarchive:
-        src: "/tmp/{{ project_name }}.tar"
-        dest: "{{ project_install_path }}"
+        src: "/tmp/{{ adf_project_name }}.tar"
+        dest: "{{ adf_install_path }}"
         remote_src: yes
+
+    - name: "Copie de la configuration dans app.config.json"
+      template:
+        src: ./templates/app.config.json.j2
+        dest: "{{ adf_install_path }}/{{ adf_project_name }}/app.config.json"
 
     - name: "Changement des permissions sur les sources du projet"
       ansible.builtin.file:
-        path: "{{ project_install_path }}/{{ project_name }}"
+        path: "{{ adf_install_path }}/{{ adf_project_name }}"
         state: directory
         recurse: yes
         owner: www-data

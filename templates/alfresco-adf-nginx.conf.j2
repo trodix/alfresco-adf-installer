@@ -1,8 +1,10 @@
+# {{ ansible_managed }}
+
 server {
-  listen 0.0.0.0:{{ project_port }};
-  root {{ project_install_path }}/{{ project_name }};
+  listen 0.0.0.0:{{ adf_port }};
+  root {{ adf_install_path }}/{{ adf_project_name }};
   index index.html;
-  location /adf {
+  location / {
     autoindex on;
     try_files $uri $uri/ /index.html;
   }

@@ -1,0 +1,36 @@
+{
+  "$schema": "../node_modules/@alfresco/adf-core/app.config.schema.json",
+  "ecmHost": "{{ ecm_host }}",
+  "bpmHost": "{{ bpm_host }}",
+  "identityHost": "{{ adf_identity_host }}",
+  "providers": "{{ adf_providers }}",
+  "application": {
+    "name": "Alfresco ADF Application"
+  },
+  "authType": "{{ adf_auth_type }}",
+  "oauth2": {
+    "host": "{{ adf_oauth.host }}",
+    "clientId": "{{ adf_oauth.client_id }}",
+    "scope": "{{ adf_oauth.scope }}",
+    "secret": "{{ adf_oauth.secret }}",
+    "implicitFlow": {{ adf_oauth.implicit_flow }},
+    "silentLogin": {{ adf_oauth.silent_login }},
+    "redirectSilentIframeUri": "{{ adf_oauth.redirect_silent_iframe_uri }}",
+    "redirectUri": "{{ adf_oauth.redirect_uri }}",
+    "redirectUriLogout": "{{ adf_oauth.redirect_uri_logout }}"
+  },
+  "languages": [
+    {
+      "key": "en",
+      "label": "English"
+    },
+    {
+      "key": "fr",
+      "label": "French"
+    }
+  ],
+  "sideNav": {
+    "preserveState": true
+  },
+  "logLevel": "trace"
+}
